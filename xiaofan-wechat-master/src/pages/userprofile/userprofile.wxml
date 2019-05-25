@@ -1,0 +1,21 @@
+<import src="/components/templates.wxml" />
+<block wx:if="{{user}}">
+  <template is="profile" data="{{user, relationship, i18n, profileAnimation, avatarAnimation, buttonPop, messagePop, shisTimeline}}" />
+  <view class="footer" catchtap="tapLink" data-link="https://github.com/fanfoujs/xiaofan-wechat">
+    <image mode="aspectFit" style="height: 15px;width: 150px;" src="../../assets/github.svg" />
+  </view>
+  <template is="space" />
+</block>
+<block wx:if="{{distributor}}">
+  <view class="mask">
+    <form bindsubmit="saveAppID" bindreset="reset">
+      <view class="post_mini">
+        <input class="input_bar" name="appid" placeholder-class="gray" placeholder="App ID" />
+        <view class="flex_between space_item_v" style="padding: 0 18px;">
+          <button class="btn2 dim" formType="reset" animation="{{cancelPop}}">取消</button>
+          <button class="btn2" formType="submit" animation="{{savePop}}">保存</button>
+        </view>
+      </view>
+    </form>
+  </view>
+</block>

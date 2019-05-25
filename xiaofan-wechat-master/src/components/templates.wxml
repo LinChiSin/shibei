@@ -1,0 +1,437 @@
+<!--通知条-->
+<template name="notibar">
+  <view class="notibar">
+    <view class="noti_wrapper" />
+    <view class="noti_wrapper">
+      <view wx:if="{{notis.mentions > 0}}" class="noti" />
+    </view>
+    <view class="noti_wrapper" />
+    <view class="noti_wrapper" />
+    <view class="noti_wrapper">
+      <view wx:if="{{notis.direct_messages + notis.friend_requests > 0}}" class="noti" />
+    </view>
+  </view>
+</template>
+
+<!--消息列表封装成嵌套数组，绕过微信 setData 的 1M 限制-->
+<template name="feeds_arr">
+  <template wx:for="{{feeds_arr}}" wx:key="ignorekeywarn" wx:for-item="feeds" is="feeds" data="{{feeds, isWiFi, avatarFadeIn, settings}}" />
+</template>
+
+<!--消息列表-->
+<template name="feeds">
+  <view
+    wx:for="{{feeds}}"
+    wx:for-item="feed"
+    wx:key="id"
+    wx:if="{{rawid ? (isBefore ? rawid > feed.rawid : rawid < feed.rawid) : true}}"
+    class="feed {{rawid ? 'animated expand' : ''}}"
+    data-feed="{{feed}}"
+    catchtap="tapFeed"
+  >
+    <image
+      class="avatar {{rawid ? 'small_avatar' : ''}}"
+      src="{{feed.user.profile_image_url_large}}"
+      data-user="{{feed.user}}"
+      catchtap="tapAvatar"
+      lazy-load="{{true}}"
+    />
+    <text>{{avatarFadeIn}}</text>
+    <view class="after_avatar full_width">
+      <view class="topline">
+        <text class="name">{{feed.user.name}}</text>
+        <text class="meta">{{settings.showTimeago ? feed.time_ago : ''}} {{settings.showSource ? feed.source_name : ''}}</text>
+      </view>
+      <block wx:for="{{feed.txt}}" wx:key="ignorekeywarn" wx:for-item="txt">
+        <text wx:if="{{!txt.bold_arr}}" class="{{txt.type}}" data-value="{{txt}}" catchtap="{{txt.type !== 'text' ? 'tapTxt' : ''}}">{{txt.text}}</text>
+        <block wx:else>
+            <text
+              wx:for="{{txt.bold_arr}}"
+              wx:key="ignorekeywarn"
+              class="{{txt.type}} {{item.bold?'bold':''}}"
+              data-value="{{txt}}"
+              catchtap="{{txt.type !== 'text' ? 'tapTxt' : ''}}"
+            >{{item.text}}</text>
+        </block>
+      </block>
+      <view class="photo_container">
+        <image
+          wx:if="{{feed.photo}}"
+          class="photo"
+          src="{{isWiFi ? feed.photo.largeurl : (feed.photo.type != 'gif' ? feed.photo.largeurl : feed.photo.imageurl)}}"
+          data-photo="{{feed.photo}}"
+          mode="widthFix"
+          lazy-load="{{true}}"
+        />
+      </view>
+    </view>
+  </view>
+</template>
+
+<!--照片-->
+<template name="photos_arr">
+  <template wx:for="{{feeds_arr}}" wx:key="ignorekeywarn" wx:for-item="feeds" is="photos" data="{{feeds, isWiFi}}" />
+</template>
+
+<template name="photos">
+  <view class="photo_grid">
+    <image
+      wx:for="{{feeds}}"
+      wx:for-item="feed"
+      wx:key="id"
+      class="photo_cell"
+      data-feed="{{feed}}"
+      catchtap="tapFeed"
+      src="{{isWiFi ? feed.photo.largeurl : (feed.photo.type != 'gif' ? feed.photo.largeurl : feed.photo.imageurl)}}"
+      mode="aspectFill"
+      lazy-load="{{true}}"
+    />
+  </view>
+</template>
+
+<!--UI-->
+<template name="divider">
+  <view style="height:18px;background:#f9f9fc;" />
+</template>
+
+<template name="space">
+  <view style="height:36px;" />
+</template>
+
+<!--对话-->
+<template name="feeds_context">
+  <block wx:if="{{feeds_arr[0].length > 1 && feeds_arr[0][0].id !== feed.id}}">
+    <template is="feeds" data="{{feeds: feeds_arr[0], rawid: feed.rawid, isBefore: true}}" />
+    <template is="divider" />
+  </block>
+  <template is="feed" data="{{feed, imageFadeIn, userAvatarFadeIn}}" />
+  <block wx:if="{{feeds_arr[0].length > 1 && feeds_arr[0][feeds_arr[0].length - 1].id !== feed.id}}">
+    <template is="divider" />
+    <template is="feeds" data="{{feeds: feeds_arr[0], rawid: feed.rawid, isBefore: false}}" />
+  </block>
+</template>
+
+<!--详情消息-->
+<template name="feed">
+  <view class="feed" data-feed="{{feed}}" catchtap="tapFeedDetail">
+    <image
+      class="avatar"
+      src="{{feed.user.profile_image_url_large}}"
+      style="opacity: 0;"
+      data-user="{{feed.user}}"
+      catchtap="tapAvatar"
+      bindload="userAvatarLoad"
+      lazy-load="{{true}}"
+      animation="{{userAvatarFadeIn}}"
+    />
+    <view class="after_avatar full_width">
+      <view class="topline">
+        <text class="name">{{feed.user.name}}</text>
+        <text class="meta">{{feed.time_tag}} {{feed.source_name}}</text>
+      </view>
+      <text
+        wx:for="{{feed.txt}}"
+        wx:key="ignorekeywarn"
+        wx:for-item="txt"
+        class="detail_txt {{txt.type}}"
+        data-value="{{txt}}"
+        catchtap="{{txt.type !== 'text' ? 'tapTxt' : ''}}"
+      >{{txt.text}}</text>
+    </view>
+  </view>
+  <image
+    wx:if="{{feed.photo}}"
+    class="photo"
+    style="opacity: 0;"
+    src="{{feed.photo.largeurl}}"
+    mode="widthFix"
+    catchtap="tapImage"
+    catchlongpress="longPressImage"
+    bindload="imageLoad"
+    animation="{{imageFadeIn}}"
+    lazy-load="{{true}}"
+  />
+</template>
+
+<!--加载更多-->
+<template name="loader">
+  <view class="flex_center" style="height: 30px;padding: 18px 0;">
+    <image wx:if="{{showLoader}}" mode="aspectFit" src="/assets/spinner.svg" style="height: 100%;"/>
+  </view>
+</template>
+
+<!--发消息-->
+<template name="post">
+  <view class="post" style="padding-top: {{statusBarHeight * 2}}px;">
+    <form bindsubmit="post" bindreset="reset">
+      <textarea
+        class="input"
+        style="height: {{statusBarHeight * 2 + 108}}px;"
+        name="post"
+        placeholder-class="gray"
+        placeholder="{{placeholder}}"
+        fixed="{{true}}"
+        maxlength="-1"
+        value="{{param.status}}"
+        auto-focus="{{autoFocus}}"
+        cursor="{{param.repost_status_id ? 0 : -1}}"
+        bindinput="bindinput"
+      />
+      <view class="length space_item_v {{length > 140 ? 'red' : ''}}">{{140 - length}}</view>
+      <view class="flex_between space_item_v">
+        <button
+          class="btn2 dim"
+          formType="reset"
+          animation="{{resetPop}}"
+        >{{float === true ? i18n.compose.close : i18n.compose.reset}}</button>
+        <button
+          wx:if="{{!noPhoto}}"
+          class="btn2 dim"
+          catchtap="{{photoPaths[0] ? 'removePhoto' : 'addPhoto'}}"
+          catchlongpress="{{photoPaths[0] ? 'removePhoto' : 'addGif'}}"
+          animation="{{addPhotoPop}}"
+        >
+          <text>{{i18n.compose.attachment}}</text>
+          <image
+            wx:if="{{photoPaths[0]}}"
+            src="{{photoPaths[0]}}"
+            mode="aspectFill"
+            style='position:absolute;width:100%;height:100%;filter:brightness(0.9);'
+          />
+        </button>
+        <button class="btn2" formType="{{posting ? '' : 'submit'}}" animation="{{sendPop}}">
+          <text>{{i18n.compose.send}}</text>
+          <image
+            wx:if="{{posting}}"
+            src="/assets/spinner_white.svg"
+            mode="aspectFit"
+            class="tint"
+            style='position:absolute;width:100%;height:100%;'
+          />
+        </button>
+      </view>
+    </form>
+  </view>
+</template>
+
+<!--toobar-->
+<template name="toolbar">
+  <view class="toolbar">
+    <view class="flex_item" catchtap="reply">
+      <image src="/assets/reply.svg" class="size30" animation="{{replyPop}}" />
+    </view>
+    <view class="flex_item" catchtap="repost" catchlongpress="re">
+      <image src="/assets/repost.svg" class="size30" animation="{{repostPop}}" />
+    </view>
+    <view class="flex_item" catchtap="favoriteChange">
+      <image src="/assets/favorite{{feed.favorited ? '_a' : ''}}.svg" class="size30" animation="{{starPop}}" />
+    </view>
+    <view wx:if="{{feed.user.is_me}}" class="flex_item" catchtap="destroy">
+      <image src="/assets/delete.svg" class="size30" animation="{{deletePop}}" />
+    </view>
+  </view>
+</template>
+
+<!--toobar-->
+<template name="toolbar_msg">
+  <view class="toolbar">
+    <view class="flex_item" catchtap="reply">
+      <image src="/assets/reply.svg" class="size30" animation="{{replyPop}}" />
+    </view>
+  </view>
+</template>
+
+<!--list-->
+<template name="section">
+  <view wx:if="{{list.length > 0}}" class="section">
+    <view class="section_name">{{name}}</view>
+    <view class="list">
+      <template wx:for="{{list}}" wx:key="ignorekeywarn" is="list_item" data="{{...item}}" />
+    </view>
+  </view>
+</template>
+
+<template name="list_item">
+  <view class="list_item" catchtap="{{user.is_secret && !user.is_me ? '' : 'tapListItem'}}" catchlongpress="{{id ? 'longpressListItem' : ''}}"
+    data-name="{{name}}" data-id="{{id}}" data-query="{{query}}" data-url="{{url}}" data-user="{{user}}" data-page="{{page}}">
+    <view class="label {{user.is_secret && !user.is_me ? 'gray' : ''}}">{{name}}</view>
+    <view wx:if="{{detail || detail === 0}}" class="gray">{{detail}}</view>
+    <view wx:elif="{{badge}}" class="badge">{{badge}}</view>
+    <view wx:elif="{{query && query !== name}}" class="gray">{{query}}</view>
+    <view wx:elif="{{user}}" class="gray">{{id}}</view>
+  </view>
+</template>
+
+<!--profile-->
+<template name="profile">
+  <view
+    class="header"
+    catchtap="tapImage"
+    data-photo-url="{{user.profile_background_image_url}}"
+  >
+    <image
+      class="profile_background"
+      mode="aspectFill"
+      src="{{user.profile_background_image_url}}"
+      bindload="profileLoad"
+      animation="{{profileAnimation}}"
+      lazy-load="{{true}}"
+    />
+    <view class="avatar_container" catchtap="tapImage" data-photo-url="{{user.profile_image_url_large}}">
+      <image
+        class="avatar"
+        style="opacity: 0;"
+        src="{{user.profile_image_url_large}}"
+        bindload="avatarLoad"
+        animation="{{avatarAnimation}}"
+      />
+    </view>
+  </view>
+  <view class="info">
+    <view class="name" data-id="{{user.id}}" catchtap="tapName">{{user.name}}</view>
+    <view wx:if="{{user.location.length}}" class="description">{{i18n.me.location}}{{user.location}}</view>
+    <view
+      wx:if="{{user.url.length && user.url !== 'http://'}}"
+      class="description">{{i18n.me.website}}<text class="link" data-link="{{user.url}}" catchtap="tapLink">{{user.url}}</text></view>
+    <view wx:if="{{user.description.length}}" class="description">{{i18n.me.bio}}<text>{{user.description}}</text></view>
+    <view wx:if="{{user.birth_date}}" class="description">{{i18n.me.birth}}{{user.birth_date}} {{user.sign_name}}</view>
+    <view class="flex_between description">
+      <view>{{i18n.me.fanfou_age}}{{user.fanfou_age}}</view>
+      <image wx:if="{{user.protected}}" class="protected" src="/assets/private.svg"/>
+    </view>
+    <view wx:if="{{relationship && !user.is_me}}" class="flex_between space_item_v">
+      <view
+        wx:if="{{relationship.following && relationship.followed_by}}"
+        class="btn3 dim space_item_h"
+        catchtap="unfollow"
+        catchlongpress="block"
+        data-user="{{user}}"
+        animation="{{buttonPop}}"
+      >{{i18n.me.followed_each_other}}</view>
+      <view
+        wx:elif="{{!relationship.following && relationship.followed_by}}"
+        class="btn3 space_item_h"
+        catchtap="follow"
+        catchlongpress="block"
+        data-user="{{user}}"
+        animation="{{buttonPop}}"
+      >{{i18n.me.become_friend}}</view>
+      <view
+        wx:elif="{{relationship.following && !relationship.followed_by}}"
+        class="btn3 dim space_item_h"
+        catchtap="unfollow"
+        catchlongpress="block"
+        data-user="{{user}}"
+        animation="{{buttonPop}}"
+      >{{i18n.me.followed}}</view>
+      <view
+        wx:elif="{{relationship.blocking}}"
+        class="btn3 dark space_item_h"
+        catchlongpress="unblock"
+        data-user="{{user}}"
+      >{{i18n.me.blocked}}</view>
+      <view
+        wx:else
+        class="btn3 space_item_h"
+        catchtap="follow"
+        catchlongpress="block"
+        data-user="{{user}}"
+        animation="{{buttonPop}}"
+      >{{i18n.me.follow}}</view>
+      <view
+        class="btn3 space_item_h"
+        catchtap="message"
+        data-user="{{user}}"
+        animation="{{messagePop}}"
+      >{{i18n.me.direct_messages}}</view>
+    </view>
+  </view>
+  <view class="section">
+    <view class="list">
+      <template is="list_item" data="{{name: i18n.me.statuses, detail: user.statuses_count, user, url: '/statuses/user_timeline', page: '../feeds/feeds'}}" />
+      <template is="list_item" data="{{name: i18n.me.photos, detail: user.photo_count, user, url: '/photos/user_timeline', page: '../photos/photos'}}" />
+      <template is="list_item" data="{{name: i18n.me.likes, detail: user.favourites_count, user, url: '/favorites', page: '../feeds/feeds'}}" />
+    </view>
+  </view>
+  <view class="section">
+    <view class="list">
+      <template is="list_item" data="{{name: i18n.me.following, detail: user.friends_count, user, url: '/users/friends',  page: '../users/users'}}" />
+      <template is="list_item" data="{{name: i18n.me.followers, detail: user.followers_count, user, url: '/users/followers',  page: '../users/users'}}" />
+    </view>
+  </view>
+  <view wx:if="{{!user.is_me}}" class="section">
+    <view class="list">
+      <template is="list_item" data="{{name: shisTimeline, user, url: '/statuses/home_timeline', page: '../feeds/feeds'}}" />
+    </view>
+  </view>
+</template>
+
+<!--users-->
+<template name="users_arr">
+  <template wx:for="{{users_arr}}" wx:key="ignorekeywarn" wx:for-item="users" is="users" data="{{users, name, i18n}}" />
+</template>
+
+<template name="users">
+  <view wx:for="{{users}}" wx:key="ignorekeywarn" class="user flex_between" data-user="{{item}}" catchtap="tapAvatar">
+    <view class="cell_item full_width">
+      <image class="avatar" src="{{item.profile_image_url_large}}" />
+      <view class="name">{{item.name}}</view>
+    </view>
+    <view wx:if="{{name === i18n.request.name}}" class="cell_item">
+      <view wx:if="{{!item.accept}}" class="btn2 dim space_item_h" data-user="{{item}}" catchtap="deny">{{i18n.request.reject}}</view>
+      <view class="btn2 space_item_h {{item.accept ? 'green' : ''}}" data-user="{{item}}" catchtap="{{item.accept ? 'preventDefault' : 'accept'}}">{{item.accept ? i18n.request.accepted : i18n.request.accept}}</view>
+    </view>
+  </view>
+</template>
+
+<!--messages-->
+<template name="messages_arr">
+  <template wx:for="{{messages_arr}}" wx:key="ignorekeywarn" wx:for-item="messages" is="messages" data="{{messages, i18n}}" />
+</template>
+
+<template name="messages">
+  <view
+    wx:for="{{messages}}"
+    wx:for-item="message"
+    wx:key="ignorekeywarn"
+    class="feed"
+    data-message="{{message}}"
+    catchtap="tapMessage"
+  >
+    <view>
+      <view wx:if="{{message.new_conv && !message.dm.sender.is_me}}" class="new" />
+      <image
+        class="avatar"
+        src="{{message.dm.sender.is_me ? message.dm.recipient.profile_image_url_large : message.dm.sender.profile_image_url_large}}"
+        data-user="{{message.dm.sender.is_me ? message.dm.recipient : message.dm.sender}}"
+        catchtap="tapAvatar"
+        />
+    </view>
+    <view class="after_avatar full_width">
+      <view class="topline">
+        <text class="name">{{message.dm.sender.is_me ? message.dm.recipient.name : message.dm.sender.name}}</text>
+        <text class="meta">{{message.dm.time_ago}}</text>
+      </view>
+      <text class="dm-text {{message.dm.sender.is_me ? 'sender-is-me' : ''}}">{{message.dm.sender.is_me ? i18n.dm.me + message.dm.text : message.dm.text}}</text>
+    </view>
+  </view>
+</template>
+
+<!--message-->
+<template name="message_arr">
+  <template wx:for="{{message_arr}}" wx:key="ignorekeywarn" wx:for-item="message" is="message" data="{{message}}" />
+</template>
+
+<template name="message">
+  <view
+    wx:for="{{message}}"
+    wx:for-item="msg"
+    wx:key="id"
+    class="msg {{msg.sender.is_me ? 'msg_end' : ''}}"
+    data-msg="{{msg}}"
+    catchtap="tapMsg"
+  >
+    <text class="bubble">{{msg.text}}</text>
+    <view class="meta">{{msg.time_tag}}</view>
+  </view>
+</template>

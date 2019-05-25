@@ -1,0 +1,69 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/mention/mention",
+    "pages/post/post",
+    "pages/search/search",
+    "pages/profile/profile",
+    "pages/feeds/feeds",
+    "pages/feed/feed",
+    "pages/photos/photos",
+    "pages/friendship/friendship",
+    "pages/message/message",
+    "pages/messages/messages",
+    "pages/userprofile/userprofile",
+    "pages/login/login",
+    "pages/users/users",
+    "pages/change-profile/change-profile",
+    "pages/tutorial/tutorial",
+    "pages/about/about",
+    "pages/settings/settings"
+  ],
+  "window": {
+    "backgroundColor": "#FFF",
+    "backgroundTextStyle": "dark",
+    "navigationStyle": "custom",
+    "navigationBarBackgroundColor": "#FFF",
+    "navigationBarTitleText": "",
+    "navigationBarTextStyle": "black",
+    "onReachBottomDistance": 66
+  },
+  "tabBar": {
+    "color": "#7D8FB2",
+    "backgroundColor": "#FFF",
+    "borderStyle": "white",
+    "selectedColor": "#33A5FF",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "iconPath": "assets/tab_home.png",
+        "selectedIconPath": "assets/tab_home_a.png"
+      },
+      {
+        "pagePath": "pages/mention/mention",
+        "iconPath": "assets/tab_mention.png",
+        "selectedIconPath": "assets/tab_mention_a.png"
+      },
+      {
+        "pagePath": "pages/post/post",
+        "iconPath": "assets/tab_post.png",
+        "selectedIconPath": "assets/tab_post_a.png"
+      },
+      {
+        "pagePath": "pages/search/search",
+        "iconPath": "assets/tab_search.png",
+        "selectedIconPath": "assets/tab_search_a.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "iconPath": "assets/tab_profile.png",
+        "selectedIconPath": "assets/tab_profile_a.png"
+      }
+    ]
+  },
+  "networkTimeout": {
+    "request": 10000,
+    "downloadFile": 20000
+  },
+  "sitemapLocation": "sitemap.json"
+}
