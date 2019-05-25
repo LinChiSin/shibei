@@ -36,28 +36,23 @@
     "list": [
       {
         "pagePath": "pages/home/home",
-        "iconPath": "assets/tab_home.png",
-        "selectedIconPath": "assets/tab_home_a.png"
+        "iconPath": "assets/homepage.png",
+        "selectedIconPath": "assets/homepage_a.png"
       },
       {
         "pagePath": "pages/mention/mention",
-        "iconPath": "assets/tab_mention.png",
-        "selectedIconPath": "assets/tab_mention_a.png"
-      },
-      {
-        "pagePath": "pages/post/post",
-        "iconPath": "assets/tab_post.png",
-        "selectedIconPath": "assets/tab_post_a.png"
+        "iconPath": "assets/tutor.png",
+        "selectedIconPath": "assets/tutor_a.png"
       },
       {
         "pagePath": "pages/search/search",
-        "iconPath": "assets/tab_search.png",
-        "selectedIconPath": "assets/tab_search_a.png"
+        "iconPath": "assets/discover.png",
+        "selectedIconPath": "assets/discover_a.png"
       },
       {
         "pagePath": "pages/profile/profile",
-        "iconPath": "assets/tab_profile.png",
-        "selectedIconPath": "assets/tab_profile_a.png"
+        "iconPath": "assets/user.png",
+        "selectedIconPath": "assets/user_a.png"
       }
     ]
   },
